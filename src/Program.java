@@ -1,23 +1,39 @@
-import java.util.ArrayList;
-import java.util.List;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.Scanner;
 
 public class Program {
 
     private static final int byteSize = 256;
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
+        if (args.length != 1) {
+            System.out.println("Wrong number of arguments. Usage:\n" +
+                    "java -jar ip-addr-counter.jar <full-path-to-file-with-the-list-of-ips>");
+            return;
+        }
+
 
         int[][][][] octs = new int[byteSize][][][];
 
-        addIP("1.1.1.1", octs);
-        addIP("1.1.1.2", octs);
-        addIP("1.1.1.3", octs);
+        try (FileInputStream inputStream = new FileInputStream(args[0]);
+             Scanner sc = new Scanner(inputStream, StandardCharsets.UTF_8)) {
 
-        addIP("11.6.1.1", octs);
-        addIP("11.6.1.1", octs);
-        addIP("12.6.1.1", octs);
-        addIP("13.6.1.1", octs);
+            while (sc.hasNextLine()) {
+                String ip = sc.nextLine();
+                addIP(ip, octs);
+            }
 
+            if (sc.ioException() != null) {
+                throw sc.ioException();
+            }
+        }
+
+        System.out.println(getNumberOfUniqueIps(octs));
+    }
+
+    private static int getNumberOfUniqueIps(int[][][][] octs) {
         int res = 0;
 
         for (int i = 0; i < byteSize; i++) {
@@ -41,7 +57,7 @@ public class Program {
             }
         }
 
-        System.out.println(res);
+        return res;
     }
 
     private static void addIP(String ip, int[][][][] octs) {
